@@ -127,6 +127,9 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--sign", :flag,
+            "Generate .changes and sign it"
+
   def initialize(*args)
     super(*args)
     attributes[:deb_priority] = "extra"
@@ -393,7 +396,9 @@ class FPM::Package::Deb < FPM::Package
         safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
       end
     end
-    sign(output_path)
+    if attributes[:deb_sign?]
+      sign(output_path)
+    end
   end # def output
 
   def converted_from(origin)
