@@ -528,7 +528,7 @@ Checksums-Sha1:
 Checksums-Sha256:
  #{sha256_checksum} #{size} #{path}
 Files:
- #{md5_checksum} #{size} python #{attributes[:deb_priority]} #{path}
+ #{md5_checksum} #{size} #{@category} #{attributes[:deb_priority]} #{path}
 "
     changes_path = File.basename(path, ".*") + ".changes"
     File.open(changes_path, "w") { |f| f.write(changes) }
