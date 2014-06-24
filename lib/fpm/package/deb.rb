@@ -6,6 +6,7 @@ require "fpm/util"
 require "backports"
 require "fileutils"
 require "digest"
+require "time"
 
 # Support for debian packages (.deb files)
 #
@@ -392,6 +393,7 @@ class FPM::Package::Deb < FPM::Package
         safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
       end
     end
+    sign(output_path)
   end # def output
 
   def converted_from(origin)
@@ -498,6 +500,40 @@ class FPM::Package::Deb < FPM::Package
       return File.join(@control_path, path)
     end
   end # def control_path
+
+  def sign(path)
+    date = Time.now.rfc2822
+    size = File.size? path
+    content = File.open(path).read()
+    sha1_checksum = Digest::SHA1.hexdigest content
+    sha256_checksum = Digest::SHA256.hexdigest content
+    md5_checksum = Digest::MD5.hexdigest content
+    changes = "Format: 1.8
+Date: #{date}
+Source: #{@name}
+Binary: #{@name}
+Architecture: #{@architecture}
+Version: #{@version}
+Distribution: unstable
+Urgency: low
+Maintainer: #{@maintainer}
+Description:
+ #{@description}
+Changes:
+ #{@name} (#{@version}) unstable; urgency=low
+ .
+   * #{@name}=#{@version}
+Checksums-Sha1:
+ #{sha1_checksum} #{size} #{path}
+Checksums-Sha256:
+ #{sha256_checksum} #{size} #{path}
+Files:
+ #{md5_checksum} #{size} python #{attributes[:deb_priority]} #{path}
+"
+    changes_path = File.basename(path, ".*") + ".changes"
+    File.open(changes_path, "w") { |f| f.write(changes) }
+    safesystem("debsign", changes_path)
+  end
 
   def write_control_tarball
     # Use custom Debian control file when given ...
