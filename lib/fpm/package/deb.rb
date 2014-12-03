@@ -408,7 +408,10 @@ class FPM::Package::Deb < FPM::Package
     self.provides = self.provides.collect do |provides|
       fix_provides(provides)
     end.flatten
-      
+
+    if origin == FPM::Package::Python then
+      @category = "python"
+    end
   end # def converted_from
 
   def debianize_op(op)
